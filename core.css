@@ -1,0 +1,76 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+:root {
+    font-size: 62.5%;
+    /* (62.5/100) * 16px = 10px */
+    color-scheme: light dark;
+}
+/* 
+@media (prefers-reduced-motion: reduce) {
+    html:focus-within {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+*/ label,
+button,
+select,
+summary,
+[type=radio],
+[type=submit],
+[type=checkbox] {
+    cursor: pointer;
+}
+
+html:focus-within {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    text-rendering: optimizeSpeed;
+    /* line-height: 1.5; */
+    margin: 0;
+}
+
+main {
+    margin: 8px;
+}
+
+a:not([class]) {
+    text-decoration-skip-ink: auto;
+    text-underline-position: under;
+
+
+    text-decoration-thickness: 8;
+} /*
+
+img,
+picture {
+    max-width: 100%;
+    display: block;
+}
+
+input,
+button,
+textarea,
+select {
+    font: inherit;
+} */

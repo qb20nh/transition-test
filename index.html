@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transition test</title>
+    <link rel="import" href="page.html">
+    <link rel="stylesheet" href="theme.css">
+</head>
+
+<body>
+    <div id="zoom_controls">
+        <!-- <button type="button" id="zoom_in"><img src="zoom_in.svg" alt="+"></button>
+        <button type="button" id="zoom_out"><img src="zoom_out.svg" alt="-"></button> -->
+    </div>
+    <main>
+        <form id="form">
+            <label title="Slow down animation">
+                <input type="checkbox" name="slowdown" id="slowdown">
+            </label>
+            <label title="todo title"><input id="inpu" type="text" autofocus placeholder="Type something" required></label>
+            <span id="spa"></span>
+            <button type="submit" id="go">Push</button>
+        </form>
+        <span class="bbox" id="bbox" aria-hidden="true"></span>
+        <div id="out"></div>
+        <span class="bbox" id="bbox2" aria-hidden="true"></span>
+    </main>
+    <script type="module" src="app.mjs"></script>
+</body>
+
+</html>

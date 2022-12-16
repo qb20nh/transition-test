@@ -1,0 +1,87 @@
+@import url('core.css');
+
+@property --slow-mode {
+    syntax: "<integer>";
+    inherits: true;
+    initial-value: 0;
+}
+
+#zoom_controls {
+    transform-origin: 0 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    font-size: 0;
+    overflow: hidden;
+    border-end-end-radius: .5rem;
+    width: 8rem;
+
+    /* transform: scale(calc(1/var(--zoom))); */
+}
+
+@media (prefers-color-scheme: dark) {
+    #zoom_controls>button img {
+        filter: invert(100%) sepia(49%) saturate(144%) hue-rotate(63deg) brightness(111%) contrast(101%);
+    }
+}
+
+#zoom_controls>button {
+    margin: 0;
+    border: 0;
+
+    opacity: .2;
+    width: 4rem;
+    height: 4rem;
+}
+
+#zoom_controls:hover>button {
+    opacity: .5;
+}
+
+#zoom_controls>button:hover {
+    opacity: .8;
+}
+
+#zoom_controls>button>img {
+    width:4rem;
+    aspect-ratio: 1;
+}
+
+:root {
+    zoom: 3;
+    --zoom: 1;
+}
+
+body {
+    transform-origin: 0 0;
+    /* transform: scale(var(--zoom)); */
+}
+
+
+
+.bbox {
+    position: absolute;
+    pointer-events: none;
+    transform-origin: 0 0;
+    user-select: none;
+
+    /* border: 1px dashed red; */
+    white-space: nowrap;
+}
+
+#out {
+    display: inline-block;
+    font-size: 3em;
+    /* border: 1px dashed gray; */
+}
+
+#spa {
+    overflow: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
+.invisible {
+    visibility: hidden;
+}

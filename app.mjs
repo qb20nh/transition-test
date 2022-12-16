@@ -37,13 +37,13 @@ addGlobalEventListener({
     const bbox2 = qs('#bbox2')
     const out = qs('#out')
 
-    const zoom_in = qs('#zoom_in')
-    const zoom_out = qs('#zoom_out')
+    const zoomInButton = qs('#zoom_in')
+    const zoomOutButton = qs('#zoom_out')
 
-    zoom_in?.addEventListener('click', () => {
+    zoomInButton?.addEventListener('click', () => {
       zoomIn()
     })
-    zoom_out?.addEventListener('click', () => {
+    zoomOutButton?.addEventListener('click', () => {
       zoomOut()
     })
 
@@ -135,7 +135,7 @@ addGlobalEventListener({
       }
       const outAnimation = out.animate([
         { opacity: 1, transform: 'scale(1)' },
-        { opacity: 0, transform: 'scale(0.667)'}
+        { opacity: 0, transform: 'scale(0.667)' }
       ], { duration: animationDurationMillis })
       outAnimation.addEventListener('finish', () => {
         out.textContent = currentText

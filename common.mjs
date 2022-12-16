@@ -8,13 +8,13 @@ export function sleep (duration) {
   })
 }
 
-export function memoize (cb) {
+export function memoize (fn) {
   const cache = new Map()
   return (...args) => {
     const key = JSON.stringify(args)
     if (cache.has(key)) return cache.get(key)
 
-    const result = cb(...args)
+    const result = fn(...args)
     cache.set(key, result)
     return result
   }

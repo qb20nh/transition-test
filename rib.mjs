@@ -62,41 +62,45 @@ const util = {
   /**
    * Matrix multiplication operation
    * TODO matMul logic for any size
-   * @typedef {[[number, number], [number, number]]} matrix2x2
-   * @typedef {[[number], [number]]} matrix1x2
-   * @param {matrix2x2} m1 first matrix
-   * @param {matrix1x2} m2 second matrix
-   * @returns {matrix1x2}
+   * @typedef {[[number, number], [number, number]]} mat2x2
+   * @typedef {[[number], [number]]} mat1x2
+   * @param {mat2x2} m1 first matrix
+   * @param {mat1x2} m2 second matrix
+   * @returns {mat1x2}
    */
   /* eslint-disable indent */
   matMul ([[a1, b1],
            [c1, d1]],
-          [[x],
-           [y]]) {
-    return [[a1 * x + b1 * y],
-            [c1 * x + d1 * y]]
+          [x,
+           y]) {
+    return [a1 * x + b1 * y,
+            c1 * x + d1 * y]
   }
   /* eslint-enable indent */
 }
 
 /**
  * Registers event listeners related to scroll handling
- * @param {(newHoveredElement: Element) => void} setHoveredElement setter
- * @param {() => Element} getHoveredElement getter
+ * @param {(newHoveredElement: Element[]) => void} setHoveredElements setter
+ * @param {() => Element[]} getHoveredElements getter
  */
-const listenToScroll = (setHoveredElement, getHoveredElement) => {
+const listenToScroll = (setHoveredElements, getHoveredElements) => {
   document.addEventListener('pointermove', ({ clientX, clientY }) => {
-    const hoveredElement = document.elementFromPoint(clientX, clientY)
-    setHoveredElement(hoveredElement)
+    const hoveredElements = document.elementsFromPoint(clientX, clientY)
+    setHoveredElements(hoveredElements)
   }, { passive: true })
+
   document.addEventListener('pointerleave', (_) => {
-    setHoveredElement(null)
+    setHoveredElements([])
   }, { passive: true })
+
   document.addEventListener('wheel', (e) => {
     const { deltaX, deltaY } = e
+    // console.log("🚀 ~ file: rib.mjs:97 ~ document.addEventListener ~ deltaX, deltaY", deltaX, deltaY)
     const wrapper = preparedWrapper
     const { classList } = wrapper
     const [axis, direction] = [util.ab(classList, 'block', 'inline'), util.ab(classList, 'start', 'end')]
+    // console.log("🚀 ~ file: rib.mjs:100 ~ document.addEventListener ~ axis, direction", axis, direction)
     const matrixMap = {
       // [[c, s], [-s, c]]
       // cos 1 0 -1 0
@@ -107,10 +111,13 @@ const listenToScroll = (setHoveredElement, getHoveredElement) => {
       [['inline', 'start']]: [[0, -1], [1, 0]]
     }
     const rotationMatrix = matrixMap[[axis, direction]]
-    const hoveredElement = getHoveredElement()
-    const { scrollWidth, scrollHeight } = hoveredElement
-
-    (hoveredElement ?? wrapper).scrollBy(deltaX, deltaY)
+    const [transformedDeltaX, transformedDeltaY] = util.matMul(rotationMatrix, [deltaX, deltaY])
+    // console.log("🚀 ~ file: rib.mjs:113 ~ document.addEventListener ~ transformedDeltaX, transformedDeltaY", transformedDeltaX, transformedDeltaY)
+    const hoveredElements = getHoveredElements()
+    if (hoveredElements.length > 0) {
+      const { scrollWidth, scrollHeight } = hoveredElements[0]
+    }
+    ;(hoveredElements[0] ?? wrapper).scrollBy(transformedDeltaX, transformedDeltaY)
   })
 }
 

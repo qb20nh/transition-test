@@ -115,9 +115,13 @@ const listenToScroll = (setHoveredElements, getHoveredElements) => {
     // console.log("🚀 ~ file: rib.mjs:113 ~ document.addEventListener ~ transformedDeltaX, transformedDeltaY", transformedDeltaX, transformedDeltaY)
     const hoveredElements = getHoveredElements()
     if (hoveredElements.length > 0) {
-      const { scrollWidth, scrollHeight } = hoveredElements[0]
+      // for each element in chain of elements
+      // check for scroll size and position
+      // and check if there is space left for scrolling for current event delta
+      // if true, scroll that element and break
+      // if false, continue to next element(parent or behind)
+      // TODO not sure if possible but investigate if swipe navigation direction is also transformable
     }
-    ;(hoveredElements[0] ?? wrapper).scrollBy(transformedDeltaX, transformedDeltaY)
   })
 }
 

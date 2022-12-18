@@ -79,9 +79,20 @@ body {
     overflow: hidden !important;
     position: absolute !important;
     pointer-events: none !important;
-    visibility: hidden !important;
+    /* visibility: hidden !important; */
+    background: transparent !important;
+    border-color: transparent !important;
+    outline-color: transparent !important;
 }
 
 .invisible {
     visibility: hidden;
 }
+
+/* *,
+*::before,
+*::after {
+    transition-property: color, background-color, border-color, outline-color, text-shadow, box-shadow !important;
+    transition-duration: 400ms !important;
+    transition-timing-function: linear !important;
+} */

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        :root {
+            font-size: 4em;
+            line-height: 2;
+        }
+        body {
+            overscroll-behavior-inline: none;
+            overflow: hidden;
+        }
+        .horiz {
+            display: flex;
+            overflow-x: scroll;
+            white-space: nowrap;
+            --count: 6
+        }
+        .item {
+            flex: none;
+            display: inline-block;
+            width: 400px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: hsl(calc(var(--index) / var(--count) * 360), 80%, 67%);
+        }
+        .item:nth-child(1) {
+            --index: 1;
+        }
+        .item:nth-child(2) {
+            --index: 2
+        }
+        .item:nth-child(3) {
+            --index: 3
+        }
+        .item:nth-child(4) {
+            --index: 4
+        }
+        .item:nth-child(5) {
+            --index: 5
+        }
+        .item:nth-child(6) {
+            --index: 6
+        }
+        </style>
+</head>
+<body>
+        test<br>
+        <hr>
+        <div>
+          <hr>
+        </div>
+        <div>
+          <div>
+            <hr>
+          </div>
+        </div>
+        <div id="ing">ing</div>
+        <h1>Hello</h1>
+        <h1>Hello2</h1>
+        <h1>Hello3</h1>
+        <h1>Hello4</h1>
+        <div class="horiz">
+            <div class="item">1</div>
+            <div class="item">2</div>
+            <div class="item">3</div>
+            <div class="item">4</div>
+            <div class="item">5</div>
+            <div class="item">6</div>
+        </div>
+        <h1>Hello</h1>
+        <h1>Hello2</h1>
+        <h1>Hello3</h1>
+        <h1>Hello4</h1>
+        <div class="horiz">
+            <div class="item">1</div>
+            <div class="item">2</div>
+            <div class="item">3</div>
+            <div class="item">4</div>
+            <div class="item">5</div>
+            <div class="item">6</div>
+        </div>
+        <h1>Hello</h1>
+        <h1>Hello2</h1>
+        <h1>Hello3</h1>
+        <h1>Hello4</h1>
+        <div class="horiz">
+            <div class="item">1</div>
+            <div class="item">2</div>
+            <div class="item">3</div>
+            <div class="item">4</div>
+            <div class="item">5</div>
+            <div class="item">6</div>
+        </div>
+        <h1>Hello</h1>
+        <h1>Hello2</h1>
+        <h1>Hello3</h1>
+        <h1>Hello4</h1>
+        <script type="module" src="rib.mjs"></script>
+
+</body>
+</html>

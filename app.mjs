@@ -63,16 +63,39 @@ addGlobalEventListener({
       })
     })
 
-    Object.assign(spa.style, Object.fromEntries(Object.entries(window.getComputedStyle(inpu)).filter(([k, v]) => isNaN(Number(k)))))
+    const darkModeMediaMatch = window.matchMedia('(prefers-color-scheme: dark)')
 
-    const inputRect = inpu.getBoundingClientRect()
-    spa.style.left = inputRect.left + 'px'
-    spa.style.top = inputRect.top + 'px'
+    const initStyle = () => {
+      inpu.style.color = ''
+      const propertiesToCopy = ['color', 'font', 'padding', 'border', 'margin', 'background']
+      Object.assign(spa.style, Object.fromEntries(Object.entries(window.getComputedStyle(inpu)).filter(([k, v]) => propertiesToCopy.includes(k))))
+      inpu.style.color = 'transparent'
+      inpu.style.caretColor = spa.style.color
+      const inputRect = inpu.getBoundingClientRect()
+      spa.style.left = inputRect.left + 'px'
+      spa.style.top = inputRect.top + 'px'
+    }
+
+    initStyle()
+
+    darkModeMediaMatch.addEventListener('change', (e) => {
+      console.info('change', e)
+      initStyle()
+    })
+
     spa.style.width = '100vw'
 
-    inpu.addEventListener('input', () => {
-      spa.textContent = inpu.value
-    })
+    const syncContent = () => {
+      const currentContent = spa.textContent
+      const newContent = inpu.value
+      const shorterLength = Math.min(currentContent.length, newContent.length)
+      const longerLength = Math.min(currentContent.length, newContent.length)
+      for (let i = 0; i < shorterLength; i++) {
+        l
+      }
+    }
+
+    inpu.addEventListener('input', syncContent)
 
     inpu.addEventListener('scroll', () => {
       spa.scrollLeft = inpu.scrollLeft
@@ -153,6 +176,8 @@ addGlobalEventListener({
         bbox2.classList.add(invisibleClass)
         out.classList.remove(invisibleClass)
       })
+
+      syncContent()
     })
   }
 })

@@ -91,7 +91,7 @@ addGlobalEventListener({
       const shorterLength = Math.min(currentContent.length, newContent.length)
       const longerLength = Math.min(currentContent.length, newContent.length)
       for (let i = 0; i < shorterLength; i++) {
-        l
+        
       }
     }
 

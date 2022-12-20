@@ -80,57 +80,120 @@ const util = {
 }
 
 /**
- * Registers event listeners related to scroll handling
- * @param {(newHoveredElement: Element[]) => void} setHoveredElements setter
- * @param {() => Element[]} getHoveredElements getter
+ *
+ * @typedef {[number, number]} Position
+ * @param {Position} pointerPosition
+ * @param {number} transformedDeltaX
+ * @param {number} transformedDeltaY
  */
-const listenToScroll = (setHoveredElements, getHoveredElements) => {
+const scrollInnermostElement = (pointerPosition, transformedDeltaX, transformedDeltaY) => {
+  // TODO investigate if swipe navigation direction is transformable
+  const hoveredElements = document.elementsFromPoint(...pointerPosition)
+  for (const hoveredElement of hoveredElements) {
+    console.log('🚀 ~ file: rib.mjs:91 ~ scrollInnermostElement ~ hoveredElement', hoveredElement)
+    // for each element in chain of elements
+    // check for scroll size and position
+    break
+    // and check if there is space left for scrolling for current event delta
+    // if true, scroll that element and break
+    // if false, continue to next element(parent or behind)
+  }
+}
+
+/**
+ *
+ * @param {number} angle angle in degrees
+ * @returns minimum equivalent positive angle in degrees
+ */
+const normalizeAngle = (angle) => {
+  return (angle > 0 ? angle : (angle % 360 + 360)) % 360
+}
+
+/**
+ * Registers event listeners related to pointer
+ * @param {(newCursorPosition: Position) => void} setCursorPosition setter
+ */
+const listenToPointer = (setCursorPosition) => {
   document.addEventListener('pointermove', ({ clientX, clientY }) => {
-    const hoveredElements = document.elementsFromPoint(clientX, clientY)
-    setHoveredElements(hoveredElements)
+    setCursorPosition([clientX, clientY])
   }, { passive: true })
 
   document.addEventListener('pointerleave', (_) => {
-    setHoveredElements([])
+    setCursorPosition(null)
   }, { passive: true })
+}
 
+/**
+ * @type {['block' | 'inline', 'start' | 'end']} rotationKey
+ * @type {{[_: rotationKey]: [angle: number]}}
+ */
+const rotationMap = {
+  [['block', 'start']]: 0,
+  [['inline', 'end']]: 90,
+  [['block', 'end']]: 180,
+  [['inline', 'start']]: 270
+}
+/**
+ * @type {{[angle: number]: [matrix: mat2x2]}}
+ */
+const matrixMap = {
+  // [[c, s], [-s, c]]
+  // cos 1 0 -1 0
+  // sin 0 1 0 -1
+  0: [[1, 0], [0, 1]],
+  90: [[0, 1], [-1, 0]],
+  180: [[-1, 0], [0, -1]],
+  270: [[0, -1], [1, 0]]
+}
+
+/**
+ * Registers event listeners related to scroll handling
+ * @param {() => Position} getCursorPosition getter
+ */
+const listenToScroll = (getCursorPosition) => {
   document.addEventListener('wheel', (e) => {
     const { deltaX, deltaY } = e
-    // console.log("🚀 ~ file: rib.mjs:97 ~ document.addEventListener ~ deltaX, deltaY", deltaX, deltaY)
     const wrapper = preparedWrapper
     const { classList } = wrapper
     const [axis, direction] = [util.ab(classList, 'block', 'inline'), util.ab(classList, 'start', 'end')]
-    // console.log("🚀 ~ file: rib.mjs:100 ~ document.addEventListener ~ axis, direction", axis, direction)
-    const matrixMap = {
-      // [[c, s], [-s, c]]
-      // cos 1 0 -1 0
-      // sin 0 1 0 -1
-      [['block', 'start']]: [[1, 0], [0, 1]],
-      [['inline', 'end']]: [[0, 1], [-1, 0]],
-      [['block', 'end']]: [[-1, 0], [0, -1]],
-      [['inline', 'start']]: [[0, -1], [1, 0]]
-    }
-    const rotationMatrix = matrixMap[[axis, direction]]
+    const rotationAngle = normalizeAngle(rotationMap[[axis, direction]])
+    const rotationMatrix = matrixMap[rotationAngle]
     const [transformedDeltaX, transformedDeltaY] = util.matMul(rotationMatrix, [deltaX, deltaY])
-    // console.log("🚀 ~ file: rib.mjs:113 ~ document.addEventListener ~ transformedDeltaX, transformedDeltaY", transformedDeltaX, transformedDeltaY)
-    const hoveredElements = getHoveredElements()
-    if (hoveredElements.length > 0) {
-      // for each element in chain of elements
-      // check for scroll size and position
-      // and check if there is space left for scrolling for current event delta
-      // if true, scroll that element and break
-      // if false, continue to next element(parent or behind)
-      // TODO not sure if possible but investigate if swipe navigation direction is also transformable
+    const cursorPosition = getCursorPosition()
+    scrollInnermostElement(cursorPosition, transformedDeltaX, transformedDeltaY)
+  }, { passive: true })
+}
+
+/**
+ * @typedef {<T>() => T} Getter<T>
+ * @typedef {<T>(newValue: T) => void} Setter<T>
+ * @param  {[T]} args default value
+ * @returns {[Setter<T>, Getter<T>]} a getter and setter pair
+ */
+const createVariable = (...args) => {
+  const _defaultValue = args[0]
+  delete args[0]
+  const _type = typeof _defaultValue
+  let value = _defaultValue
+  const setter = (newValue = _defaultValue) => {
+    const newType = typeof newValue
+    if (newType === _type) {
+      value = newValue
+    } else {
+      throw new TypeError(`Expected new value with type '${_type}' but got '${newType}'`)
     }
-  })
+  }
+  const getter = () => {
+    return value ?? _defaultValue
+  }
+  return [setter, getter]
 }
 
 document.addEventListener('DOMContentLoaded', (_) => {
   insertStyle()
   wrapBody()
 
-  let hoveredElement = null
-  listenToScroll((newHoveredElement) => {
-    hoveredElement = newHoveredElement
-  }, () => hoveredElement)
+  const [setter, getter] = createVariable([-1, -1])
+  listenToPointer(setter)
+  listenToScroll(getter)
 }, { passive: true })

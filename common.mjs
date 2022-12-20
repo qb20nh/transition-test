@@ -36,6 +36,12 @@ export function addGlobalEventListener ({
   )
 }
 
+/**
+ * 
+ * @param {string} selector 
+ * @param {ParentNode} parent 
+ * @returns {Element?} potential matched element
+ */
 export function qs (selector, parent = document) {
   return parent.querySelector(selector)
 }

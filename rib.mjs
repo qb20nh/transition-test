@@ -124,6 +124,7 @@ const util = {
             c1 * x + d1 * y]
   },
   /* eslint-enable indent */
+  // Courtesy of https://learnersbucket.com/examples/interview/debounce-function-with-immediate-flag-in-javascript/
   debounce (func, timeout, immediate = false) {
     let timer
 

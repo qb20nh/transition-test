@@ -28,6 +28,14 @@ rotate: 90deg;
 .rotate.block.end {
 rotate: 180deg;
 }
+
+.cover {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
 `
 
   const style = document.createElement('style')
@@ -42,11 +50,18 @@ let preparedWrapper = null
 
 const wrapBody = () => {
   const body = document.body
+  // create and insert wrapper for rotation transform
   const wrapper = document.createElement('div')
   wrapper.classList.add('rotate', 'inline', 'start')
   body.insertBefore(wrapper, body.firstChild)
   wrapper.append(...Array.from(body.childNodes).slice(1))
   preparedWrapper = wrapper
+
+  // create and insert cover to consume wheel event
+  // FIXME all interactions other than scrolling is impossible
+  const cover = document.createElement('div')
+  cover.classList.add('cover')
+  body.append(cover)
 }
 
 const util = {
@@ -79,13 +94,15 @@ const util = {
   /* eslint-enable indent */
 }
 
+const __eventBoundaryValue = 'scroll'
 /**
- * 
- * @param {Element} element 
- * @param {number} deltaX 
- * @param {number} deltaY 
+ *
+ * @param {Element} element
+ * @param {number} deltaX
+ * @param {number} deltaY
  */
 const scrollElement = (element, deltaX, deltaY) => {
+  element.__event_boundary = __eventBoundaryValue
   element.scrollBy(deltaX, deltaY)
 }
 
@@ -96,12 +113,13 @@ const scrollElement = (element, deltaX, deltaY) => {
  * @param {number} transformedDeltaX
  * @param {number} transformedDeltaY
  */
-// ! refactor to lower cognitive complexity
+// FIXME refactor to lower cognitive complexity
 const scrollInnermostElement = (pointerPosition, transformedDeltaX, transformedDeltaY) => {
   // TODO investigate if swipe navigation direction is transformable
-  const hoveredElements = document.elementsFromPoint(...pointerPosition)
+  const hoveredElements = document.elementsFromPoint(...pointerPosition).slice(1)
   // for each element under pointer position
   for (const hoveredElement of hoveredElements) {
+    let [dx, dy] = [transformedDeltaX, transformedDeltaY]
     // check for scroll size and position
     const currentStyle = hoveredElement.computedStyleMap()
     const [ofx, ofy] = ['overflow-x', 'overflow-y'].map((keyword) => currentStyle.get(keyword).value)
@@ -110,19 +128,20 @@ const scrollInnermostElement = (pointerPosition, transformedDeltaX, transformedD
     const { scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight } = hoveredElement
     const [scrollSizeX, scrollSizeY] = [scrollWidth - clientWidth, scrollHeight - clientHeight]
     const [sizeAllowScrollX, sizeAllowScrollY] = [scrollSizeX > 0, scrollSizeY > 0]
-    const [scrollPositionAllowScrollX, scrollPositionAllowScrollY] = [(transformedDeltaX < 0 && scrollLeft > 0) || scrollLeft < scrollSizeX, (transformedDeltaY < 0 && scrollTop > 0) || scrollTop < scrollSizeY]
+    const [scrollPositionAllowScrollX, scrollPositionAllowScrollY] =
+    [dx < 0 ? scrollLeft > 0 : scrollLeft < scrollSizeX, dy < 0 ? scrollTop > 0 : scrollTop < scrollSizeY]
     // and check if there is space left for scrolling for current event delta
     // if true, scroll that element and break
-    if (transformedDeltaX > transformedDeltaY) {
-      if (styleAllowScrollX && sizeAllowScrollX && scrollPositionAllowScrollX) {
-        scrollElement(hoveredElement, transformedDeltaX, 0)
-        break
-      }
-    } else {
-      if (styleAllowScrollY && sizeAllowScrollY && scrollPositionAllowScrollY) {
-        scrollElement(hoveredElement, 0, transformedDeltaY)
-        break
-      }
+    if (!(styleAllowScrollX && sizeAllowScrollX && scrollPositionAllowScrollX)) {
+      dx = 0
+    }
+    if (!(styleAllowScrollY && sizeAllowScrollY && scrollPositionAllowScrollY)) {
+      dy = 0
+    }
+    // TODO do not change scroll direction while already scrolling
+    if (dx !== 0 || dy !== 0) {
+      scrollElement(hoveredElement, dx, dy)
+      break
     }
     // if false, continue to next element(parent or behind)
   }
@@ -218,6 +237,25 @@ const createVariable = (...args) => {
   return [setter, getter]
 }
 
+const undoDoubleScroll = () => {
+  document.addEventListener('scroll', (e) => {
+    const scrollingElement = e.target
+    scrollingElement.lastScrollPosition ??= [0, 0]
+    const [lastScrollLeft, lastScrollTop] = scrollingElement.lastScrollPosition
+    const { scrollLeft, scrollTop } = scrollingElement
+    const [scrollAmountX, scrollAmountY] = [scrollLeft - lastScrollLeft, scrollTop - lastScrollTop]
+    if (scrollingElement.__event_boundary !== __eventBoundaryValue) {
+      console.log('scrollUndo', -scrollAmountX, -scrollAmountY)
+      scrollElement(scrollingElement, -scrollAmountX, -scrollAmountY)
+    } else {
+      if (!delete scrollingElement.__event_boundary) {
+        scrollingElement.__event_boundary = undefined
+      }
+    }
+    scrollingElement.lastScrollPosition = [scrollLeft, scrollTop]
+  }, { capture: true, passive: true })
+}
+
 document.addEventListener('DOMContentLoaded', (_) => {
   insertStyle()
   wrapBody()
@@ -225,4 +263,5 @@ document.addEventListener('DOMContentLoaded', (_) => {
   const [setter, getter] = createVariable([-1, -1])
   listenToPointer(setter)
   listenToScroll(getter)
+  // undoDoubleScroll()
 }, { passive: true })

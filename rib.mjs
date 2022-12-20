@@ -35,6 +35,10 @@ rotate: 180deg;
   top: 0;
   right: 0;
   bottom: 0;
+  pointer-events: none;
+}
+.cover.scrolling {
+  pointer-events: unset;
 }
 `
 
@@ -44,9 +48,37 @@ rotate: 180deg;
 }
 
 /**
- * @type Element
+ * @typedef {<T>() => T} Getter<T>
+ * @typedef {<T>(newValue: T) => void} Setter<T>
+ * @param  {[T]} args default value
+ * @returns {[Setter<T>, Getter<T>]} a getter and setter pair
  */
-let preparedWrapper = null
+const createVariable = (...args) => {
+  const lateValueKeySymbol = Symbol('lateValue')
+  const _defaultValue = args[0] ?? { [lateValueKeySymbol]: null }
+  const late = lateValueKeySymbol in _defaultValue
+  delete args[0]
+  const _type = typeof _defaultValue
+  let value = late ? undefined : _defaultValue
+  const setter = (newValue = late ? _defaultValue[lateValueKeySymbol] : _defaultValue) => {
+    const newType = typeof newValue
+    if (newType === _type) {
+      value = newValue
+      if (late && _defaultValue[lateValueKeySymbol] === null) {
+        _defaultValue[lateValueKeySymbol] = value
+      }
+    } else {
+      throw new TypeError(`Expected new value with type '${_type}' but got '${newType}'`)
+    }
+  }
+  const getter = () => {
+    return value ?? (late ? _defaultValue[lateValueKeySymbol] : _defaultValue)
+  }
+  return [setter, getter]
+}
+
+const [setWrapper, getWrapper] = createVariable()
+const [setCover, getCover] = createVariable()
 
 const wrapBody = () => {
   const body = document.body
@@ -55,13 +87,13 @@ const wrapBody = () => {
   wrapper.classList.add('rotate', 'inline', 'start')
   body.insertBefore(wrapper, body.firstChild)
   wrapper.append(...Array.from(body.childNodes).slice(1))
-  preparedWrapper = wrapper
+  setWrapper(wrapper)
 
   // create and insert cover to consume wheel event
-  // FIXME all interactions other than scrolling is impossible
   const cover = document.createElement('div')
   cover.classList.add('cover')
   body.append(cover)
+  setCover(cover)
 }
 
 const util = {
@@ -90,8 +122,26 @@ const util = {
            y]) {
     return [a1 * x + b1 * y,
             c1 * x + d1 * y]
-  }
+  },
   /* eslint-enable indent */
+  debounce (func, timeout, immediate = false) {
+    let timer
+
+    return function (...args) {
+      const context = this
+      const callNow = immediate && !timer
+
+      clearTimeout(timer)
+      timer = setTimeout(function () {
+        timer = null
+        if (!immediate) {
+          func.apply(context, args)
+        }
+      }, timeout)
+
+      if (callNow) func.apply(context, args)
+    }
+  }
 }
 
 const __eventBoundaryValue = 'scroll'
@@ -199,61 +249,31 @@ const matrixMap = {
  * @param {() => Position} getCursorPosition getter
  */
 const listenToScroll = (getCursorPosition) => {
+  const scrollingFlag = 'scrolling'
+  const debounceTimeout = 33
+  const atStart = util.debounce((cover) => {
+    cover.classList.add(scrollingFlag)
+  }, debounceTimeout, true)
+  const atEnd = util.debounce((cover) => {
+    cover.classList.remove(scrollingFlag)
+  }, debounceTimeout)
+
   document.addEventListener('wheel', (e) => {
     const { deltaX, deltaY } = e
-    const wrapper = preparedWrapper
+    const wrapper = getWrapper()
     const { classList } = wrapper
     const [axis, direction] = [util.ab(classList, 'block', 'inline'), util.ab(classList, 'start', 'end')]
     const rotationAngle = normalizeAngle(rotationMap[[axis, direction]])
     const rotationMatrix = matrixMap[rotationAngle]
     const [transformedDeltaX, transformedDeltaY] = util.matMul(rotationMatrix, [deltaX, deltaY])
     const cursorPosition = getCursorPosition()
+
     scrollInnermostElement(cursorPosition, transformedDeltaX, transformedDeltaY)
+
+    const cover = getCover()
+    atStart(cover)
+    atEnd(cover)
   }, { passive: true })
-}
-
-/**
- * @typedef {<T>() => T} Getter<T>
- * @typedef {<T>(newValue: T) => void} Setter<T>
- * @param  {[T]} args default value
- * @returns {[Setter<T>, Getter<T>]} a getter and setter pair
- */
-const createVariable = (...args) => {
-  const _defaultValue = args[0]
-  delete args[0]
-  const _type = typeof _defaultValue
-  let value = _defaultValue
-  const setter = (newValue = _defaultValue) => {
-    const newType = typeof newValue
-    if (newType === _type) {
-      value = newValue
-    } else {
-      throw new TypeError(`Expected new value with type '${_type}' but got '${newType}'`)
-    }
-  }
-  const getter = () => {
-    return value ?? _defaultValue
-  }
-  return [setter, getter]
-}
-
-const undoDoubleScroll = () => {
-  document.addEventListener('scroll', (e) => {
-    const scrollingElement = e.target
-    scrollingElement.lastScrollPosition ??= [0, 0]
-    const [lastScrollLeft, lastScrollTop] = scrollingElement.lastScrollPosition
-    const { scrollLeft, scrollTop } = scrollingElement
-    const [scrollAmountX, scrollAmountY] = [scrollLeft - lastScrollLeft, scrollTop - lastScrollTop]
-    if (scrollingElement.__event_boundary !== __eventBoundaryValue) {
-      console.log('scrollUndo', -scrollAmountX, -scrollAmountY)
-      scrollElement(scrollingElement, -scrollAmountX, -scrollAmountY)
-    } else {
-      if (!delete scrollingElement.__event_boundary) {
-        scrollingElement.__event_boundary = undefined
-      }
-    }
-    scrollingElement.lastScrollPosition = [scrollLeft, scrollTop]
-  }, { capture: true, passive: true })
 }
 
 document.addEventListener('DOMContentLoaded', (_) => {
@@ -263,5 +283,4 @@ document.addEventListener('DOMContentLoaded', (_) => {
   const [setter, getter] = createVariable([-1, -1])
   listenToPointer(setter)
   listenToScroll(getter)
-  // undoDoubleScroll()
 }, { passive: true })

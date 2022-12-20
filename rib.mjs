@@ -80,22 +80,50 @@ const util = {
 }
 
 /**
+ * 
+ * @param {Element} element 
+ * @param {number} deltaX 
+ * @param {number} deltaY 
+ */
+const scrollElement = (element, deltaX, deltaY) => {
+  element.scrollBy(deltaX, deltaY)
+}
+
+/**
  *
  * @typedef {[number, number]} Position
  * @param {Position} pointerPosition
  * @param {number} transformedDeltaX
  * @param {number} transformedDeltaY
  */
+// ! refactor to lower cognitive complexity
 const scrollInnermostElement = (pointerPosition, transformedDeltaX, transformedDeltaY) => {
   // TODO investigate if swipe navigation direction is transformable
   const hoveredElements = document.elementsFromPoint(...pointerPosition)
+  // for each element under pointer position
   for (const hoveredElement of hoveredElements) {
-    console.log('🚀 ~ file: rib.mjs:91 ~ scrollInnermostElement ~ hoveredElement', hoveredElement)
-    // for each element in chain of elements
     // check for scroll size and position
-    break
+    const currentStyle = hoveredElement.computedStyleMap()
+    const [ofx, ofy] = ['overflow-x', 'overflow-y'].map((keyword) => currentStyle.get(keyword).value)
+    const scrollAllowedValues = ['scroll', 'auto']
+    const [styleAllowScrollX, styleAllowScrollY] = [ofx, ofy].map((value) => scrollAllowedValues.includes(value))
+    const { scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight } = hoveredElement
+    const [scrollSizeX, scrollSizeY] = [scrollWidth - clientWidth, scrollHeight - clientHeight]
+    const [sizeAllowScrollX, sizeAllowScrollY] = [scrollSizeX > 0, scrollSizeY > 0]
+    const [scrollPositionAllowScrollX, scrollPositionAllowScrollY] = [(transformedDeltaX < 0 && scrollLeft > 0) || scrollLeft < scrollSizeX, (transformedDeltaY < 0 && scrollTop > 0) || scrollTop < scrollSizeY]
     // and check if there is space left for scrolling for current event delta
     // if true, scroll that element and break
+    if (transformedDeltaX > transformedDeltaY) {
+      if (styleAllowScrollX && sizeAllowScrollX && scrollPositionAllowScrollX) {
+        scrollElement(hoveredElement, transformedDeltaX, 0)
+        break
+      }
+    } else {
+      if (styleAllowScrollY && sizeAllowScrollY && scrollPositionAllowScrollY) {
+        scrollElement(hoveredElement, 0, transformedDeltaY)
+        break
+      }
+    }
     // if false, continue to next element(parent or behind)
   }
 }
@@ -106,7 +134,8 @@ const scrollInnermostElement = (pointerPosition, transformedDeltaX, transformedD
  * @returns minimum equivalent positive angle in degrees
  */
 const normalizeAngle = (angle) => {
-  return (angle > 0 ? angle : (angle % 360 + 360)) % 360
+  const modulus = 360
+  return ((angle % modulus) + modulus) % modulus
 }
 
 /**

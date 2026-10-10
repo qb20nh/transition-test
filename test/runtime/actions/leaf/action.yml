@@ -5,7 +5,7 @@ inputs:
   expected-marker:
     description: Marker expected from the action definition being executed.
     required: false
-    default: gh-actions-lock-runtime-leaf-v1
+    default: gh-actions-lock-runtime-leaf-v2
 
 outputs:
   marker:
@@ -24,7 +24,7 @@ runs:
         EXPECTED_MARKER: ${{ inputs.expected-marker }}
         DEFINITION_PATH: ${{ github.action_path }}
       run: |
-        marker=gh-actions-lock-runtime-leaf-v1
+        marker=gh-actions-lock-runtime-leaf-v2
         if [ "$EXPECTED_MARKER" != "$marker" ]; then
           printf 'Unexpected runtime leaf marker: %s\n' "$marker" >&2
           exit 1

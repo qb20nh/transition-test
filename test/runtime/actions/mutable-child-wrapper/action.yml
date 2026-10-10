@@ -1,0 +1,23 @@
+name: Mutable child workaround probe
+description: Demonstrates that a pinned parent can contain a mutable remote child.
+inputs:
+  expected-marker:
+    required: true
+    description: Expected marker from the remote child.
+outputs:
+  marker:
+    value: ${{ steps.leaf.outputs.marker }}
+    description: Marker emitted by the remote child.
+runs:
+  using: composite
+  steps:
+    - id: leaf
+      uses: qb20nh/transition-test/test/runtime/actions/leaf@codex/m6-gh-actions-lock-fixtures-20261010
+      with:
+        expected-marker: ${{ inputs.expected-marker }}
+    - shell: bash
+      env:
+        OBSERVED_MARKER: ${{ steps.leaf.outputs.marker }}
+        PARENT_PATH: ${{ github.action_path }}
+      run: |
+        printf 'M6_MUTABLE_CHILD_MARKER=%s\nM6_IMMUTABLE_PARENT_PATH=%s\n' "$OBSERVED_MARKER" "$PARENT_PATH"

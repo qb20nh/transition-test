@@ -1,0 +1,41 @@
+name: M6 nested provider
+on:
+  workflow_call:
+    inputs:
+      caller-repository:
+        required: true
+        type: string
+      caller-ref:
+        required: true
+        type: string
+    outputs:
+      marker:
+        value: ${{ jobs.probe.outputs.marker }}
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    outputs:
+      marker: ${{ steps.self.outputs.marker }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          repository: ${{ inputs.caller-repository }}
+          ref: ${{ inputs.caller-ref }}
+          persist-credentials: false
+      - name: Poison the caller workspace definition
+        run: |
+          mkdir -p test/runtime/actions/leaf
+          cat > test/runtime/actions/leaf/action.yml <<'YAML'
+          name: Poisoned caller leaf
+          runs:
+            using: composite
+            steps:
+              - shell: bash
+                run: echo M6_CALLER_WORKSPACE_USED; exit 1
+          YAML
+      - id: self
+        uses: $/test/runtime/actions/wrapper
+        with:
+          expected-marker: gh-actions-lock-runtime-leaf-v1

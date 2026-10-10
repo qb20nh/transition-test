@@ -1,0 +1,21 @@
+name: M6 provider
+on:
+  workflow_call:
+    inputs:
+      caller-repository:
+        required: true
+        type: string
+      caller-ref:
+        required: true
+        type: string
+    outputs:
+      marker:
+        value: ${{ jobs.nested.outputs.marker }}
+permissions:
+  contents: read
+jobs:
+  nested:
+    uses: ./.github/workflows/m6-leaf.yml
+    with:
+      caller-repository: ${{ inputs.caller-repository }}
+      caller-ref: ${{ inputs.caller-ref }}
